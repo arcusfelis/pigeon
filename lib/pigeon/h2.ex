@@ -1,4 +1,6 @@
 defmodule Pigeon.H2 do
+  require Logger
+
   def open(uri, port, opts \\ []) do
     try do
       :h2_client.start_link(:https, to_charlist(uri), port, opts)
@@ -13,6 +15,12 @@ defmodule Pigeon.H2 do
   end
 
   def post(conn, uri, path, headers, body) do
+    case :os.getenv("POST_REQUESTS_LOGLEVEL") do
+    :false ->
+        :ok
+    level ->
+        Logger.log(:erlang.list_to_atom(level), "event=post_call conn=#{inspect conn} uri=#{inspect uri} path=#{inspect path} headers=#{inspect headers} body=#{inspect body}")
+    end
     case :h2_connection.new_stream(conn) do
       {:error, _code} ->
         {:error, :unable_to_add_stream}
